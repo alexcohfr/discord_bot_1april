@@ -11,16 +11,6 @@ intents = discord.Intents.default()
 intents.members = True  # Nécessaire pour accéder aux membres du serveur
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Dictionnaire pour stocker les pseudonymes originaux
-
-
-
-
-
-
-    
-
-
 
 @bot.event
 async def on_ready():
