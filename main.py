@@ -1,6 +1,7 @@
 import discord
 import random
 from discord.ext import commands, tasks
+from discord import app_commands
 import sqlite3
 from config import TOKEN, SERVER_ID
 
@@ -32,7 +33,7 @@ async def on_ready():
 
 
 @bot.tree.command(name="rando", description= "randomise tous les pseudos")
-@commands.has_permissions(administrator=True)
+@app_commands.checks.has_permissions(administrator=True)
 async def randomize_nicknames(ctx):
     def populate_db(bot: discord.Client, SERVER_ID: int):
         conn = sqlite3.connect('discord_nicknames.db')
@@ -61,8 +62,8 @@ async def randomize_nicknames(ctx):
     if status == 1:
         print("La base de données a été remplie avec succès.")
     elif status == 0:
-        print("La base de données est déjà remplie, les pseudos déjà randomisé")
-        await ctx.response.send_message("La base de données est déjà remplie, les pseudos déjà randomisé")
+        print("La base de données est déjà remplie")
+        await ctx.response.send_message("La base de données est déjà remplie")
     else:
         print("Une erreur s'est produite lors du remplissage de la base de données.")
         return
@@ -92,11 +93,35 @@ async def randomize_nicknames(ctx):
     else:
         await ctx.response.send_message("Les pseudos ont été randomisés avec succès.")
 
-        
+@app_commands.checks.has_permissions(administrator=True)
+@bot.tree.command(name="locknicknames", description= "lock tous les pseudos")
+async def locknicknames(ctx):
+    for role in ctx.guild.roles:
+        try:
+            new_permissions = discord.Permissions(role.permissions.value)
+            new_permissions.update(change_nickname=False)
+            await role.edit(permissions=new_permissions)
+        except:
+            print(f"Impossible de modifier les permissions pour le rôle {role.name}")
+    await ctx.response.send_message("La permission de changer les surnoms a été retirée de tous les rôles.")    
+
+
+
+@app_commands.checks.has_permissions(administrator=True)
+@bot.tree.command(name="unlocknicknames", description= "unlock tous les pseudos")
+async def unlocknicknames(ctx):
+    for role in ctx.guild.roles:
+        try:
+            new_permissions = discord.Permissions(role.permissions.value)
+            new_permissions.update(change_nickname=True)
+            await role.edit(permissions=new_permissions)
+        except:
+            print(f"Impossible de modifier les permissions pour le rôle {role.name}")
+    await ctx.response.send_message("La permission de changer les surnoms a été accordée à tous les rôles.")
             
             
 
-@commands.has_permissions(administrator=True)
+@app_commands.checks.has_permissions(administrator=True)
 @bot.tree.command(name="restore", description= "restore tous les pseudos")
 async def restore_nicknames(ctx):
     original_nicknames = {}
@@ -128,5 +153,6 @@ async def restore_nicknames(ctx):
             await ctx.response.send_message("Les pseudos ont été restaurés avec succès.")
         except:
             await ctx.followup.send("Les pseudos ont été restaurés avec succès.")
+
 
 bot.run(TOKEN)
